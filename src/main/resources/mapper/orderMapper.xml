@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.mapper.OrderMapper">
+
+    <sql id="orderWhere">
+        from t_order where feid = #{feid}
+        <if test="feuser != null and feuser != ''">and feuser = #{feuser}</if>
+        <if test="fstate != null and fstate != ''">and fstate = #{fstate}</if>
+        <if test="fpaytype != null and fpaytype != ''">and fpaytype = #{fpaytype}</if>
+        <if test="fbegin != null and fbegin != ''">
+            and fctime &gt;= concat(#{fbegin},':00')
+        </if>
+        <if test="fend != null and fend != ''">
+            and concat(#{fend},':59') &gt;= fctime
+        </if>
+    </sql>
+
+    <!-- 流水列表 -->
+    <select id="list" parameterType="com.zs.vo.OrderQuery" resultType="com.zs.model.Order">
+        select date_format(fctime, '%Y-%m-%d %H:%i')as
+        fctime,fid,feid,fno,ftime,fname,fmoney,fdid,fstate,fbuyer,fpayno,fpaytype,feuser
+        <include refid="orderWhere"/>
+        order by fid desc
+    </select>
+
+    <!--订单详情-->
+    <select id="findByIdOrFno" parameterType="map" resultType="com.zs.model.Order">
+        select fid,fsid,fno,fpayno,fname,fmoney,fremoney,fstate,ftraceno,date_format(ftime,'%Y-%m-%d %H:%i:%s')as
+        fctime,fpaytype,fdid,fline,date_format(futime,'%Y-%m-%d %H:%i:%s')as futime,(select fname from t_data where fid
+        = o.fpaytype)as fpname,(select fname from t_user where fid = o.feuser)as fmobile,(select fname from t_store
+        where fid = o.fsid)as fsname from t_order o
+        <where>
+            <if test="fno != null and fno != ''">and fno = #{fno}</if>
+            <if test="fid != null and fid != ''">and fid = #{fid}</if>
+        </where>
+    </select>
+
+    <!-- 金额统计 -->
+    <select id="totalMoney" parameterType="com.zs.vo.OrderQuery" resultType="float">
+        select ifnull(round(sum(fmoney),2),0) as fmoney
+        <include refid="orderWhere"/>
+        and fdid != 18
+    </select>
+
+
+    <select id="statistics" resultType="com.zs.model.DayStatistics" parameterType="com.zs.vo.OrderQuery">
+        select fmoney,fremoney,fnmoney,fstate,fdeduction,fpaytype, date_format(fctime,'%Y-%m-%d') as fctime from t_order where feid = #{feid} and fctime >=str_to_date(CONCAT(#{fbegin},'00:00:00'),'%Y-%m-%d %H:%i:%s') and str_to_date(CONCAT(#{fend},'23:59:59'),'%Y-%m-%d %H:%i:%s')>=fctime and fstate in(2,4) order by fctime;
+    </select>
+
+    <select id="add" parameterType="com.zs.model.Order" statementType="CALLABLE">
+    	{call t_order_bankpay(#{feid,mode=IN,jdbcType=VARCHAR},
+    	#{fsid,mode=IN,jdbcType=VARCHAR},
+    	#{feuser,mode=IN,jdbcType=VARCHAR},
+    	#{fmoney,mode=IN,jdbcType=VARCHAR},
+    	#{fpaytype,mode=IN,jdbcType=VARCHAR},
+    	#{fdid,mode=IN,jdbcType=VARCHAR},
+    	#{fstate,mode=IN,jdbcType=VARCHAR},
+    	#{fline,mode=IN,jdbcType=VARCHAR},
+    	#{fno,mode=OUT,jdbcType=VARCHAR},
+        #{fresult,mode=OUT,jdbcType=INTEGER})}
+    </select>
+    <update id="update" parameterType="com.zs.model.Order">
+        update t_order o set fstate = 2,ftraceno = #{ftraceno},fpayno = #{fpayno},fbuyer = #{fbuyer},fissue = #{fissue},fpoundage = #{fpoundage},fnmoney = round(fmoney-#{fpoundage},2),fdeduction = (select ft1 from t_eimp_deduction where feid = o.feid and fpaytype = o.fpaytype and fcardtype = #{fcardtype}) where fno = #{fno}
+    </update>
+</mapper>

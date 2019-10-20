@@ -1,0 +1,18 @@
+server:
+  port: 80
+  servlet:
+    context-path: /
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 1
+
+spring:
+  datasource:
+    url: jdbc:mysql://39.108.16.34:53544/zgy_old
+    username: root
+    password: 437d54f114
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+

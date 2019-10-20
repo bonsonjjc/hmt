@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.mapper.UserMapper">
+    <select id="find" parameterType="map" resultType="com.zs.model.User">
+        select fid,fsid,feid,fstate,faccount,fmobile,fpasswd from t_user where (faccount=#{account} or fmobile=#{account}) and fpasswd=#{password};
+    </select>
+    <update id="password" parameterType="map">
+        update t_user set fpasswd =#{newPassword} where fpasswd=#{oldPassword} and fid=#{userId}
+    </update>
+</mapper>

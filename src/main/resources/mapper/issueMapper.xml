@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.mapper.IssueMapper">
+    <select id="list" parameterType="com.zs.vo.ListQuery" resultType="com.zs.model.Issue">
+        select
+        fid,ftype,ftitle,ftext,date_format(fctime, '%Y-%m-%d') as fctime
+        from o_issue
+        <where>
+            <if test="ftype!=null and ftype==''">
+                and ftype =#{ftype}
+            </if>
+            <if test="keyword!=null and keyword=''">
+                and fkeyword =#{keyword}
+            </if>
+        </where>
+    </select>
+
+    <select id="findById" parameterType="string" resultType="com.zs.model.Issue">
+        select
+        fid,ftype,ftitle,ftext,date_format(fctime, '%Y-%m-%d') as fctime
+        from o_issue where fid=#{fid}
+    </select>
+</mapper>
